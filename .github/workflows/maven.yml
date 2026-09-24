@@ -1,0 +1,76 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Configurar JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Compilar y empaquetar con Maven
+      run: mvn -B clean package -DskipTests
+
+    - name: Extraer versión del pom.xml
+      id: version
+      run: |
+        VERSION=$(mvn -q -B org.apache.maven.plugins:maven-help-plugin:evaluate -Dexpression=project.version -DforceStdout)
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+        echo "Versión detectada: $VERSION"
+
+    - name: Verificar si el tag ya existe
+      id: check_tag
+      run: |
+        if git rev-parse "${{ steps.version.outputs.TAG }}" >/dev/null 2>&1; then
+          echo "EXISTS=true" >> $GITHUB_OUTPUT
+          echo "El tag ${{ steps.version.outputs.TAG }} ya existe. No se creará de nuevo."
+        else
+          echo "EXISTS=false" >> $GITHUB_OUTPUT
+          echo "El tag ${{ steps.version.outputs.TAG }} no existe. Se creará."
+        fi
+
+    - name: Crear tag automáticamente
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_tag.outputs.EXISTS == 'false'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a "${{ steps.version.outputs.TAG }}" -m "Release ${{ steps.version.outputs.TAG }}"
+        git push origin "${{ steps.version.outputs.TAG }}"
+
+    - name: Subir JAR como artefacto
+      uses: actions/upload-artifact@v4
+      with:
+        name: TVShowsMS-${{ steps.version.outputs.VERSION }}-jar
+        path: target/*.jar
+        if-no-files-found: error
+        retention-days: 10
+
+    - name: Crear Release en GitHub
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_tag.outputs.EXISTS == 'false'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.TAG }}
+        files: target/*.jar
+        generate_release_notes: true
+        draft: false
+        prerelease: false

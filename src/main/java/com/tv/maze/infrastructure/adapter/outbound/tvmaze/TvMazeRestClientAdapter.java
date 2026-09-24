@@ -51,9 +51,9 @@ public class TvMazeRestClientAdapter implements TvShowClientPort{
 	public Optional<ShowDetail> getShowById(Long showId) {
 		try {
             TvMazeShowDto dto = restClient.get()
-                    .uri("https://api.tvmaze.com/shows/{show_id}", showId)
+                    .uri( "https://api.tvmaze.com/shows/{show_id}", showId )
                     .retrieve()
-                    .body(TvMazeShowDto.class);
+                    .body( TvMazeShowDto.class );
 
             if (dto == null) {
                 return Optional.empty();
