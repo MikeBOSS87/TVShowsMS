@@ -4,7 +4,7 @@
    
     <!-- Archivo de logs INFO -->
     <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app-info.log</file>
+        <file>logs/ms-tvShow-info.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/ms-tvShow-info-%d{dd-MM-yyyy}.log</fileNamePattern>
             <maxHistory>10</maxHistory>
@@ -21,7 +21,7 @@
    
     <!-- Archivo de logs ERROR -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app-error.log</file>
+        <file>logs/ms-tvShow-error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/ms-tvShow-error-%d{dd-MM-yyyy}.log</fileNamePattern>
             <maxHistory>10</maxHistory>
